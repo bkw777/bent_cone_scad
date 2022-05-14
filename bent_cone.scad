@@ -76,14 +76,14 @@ module arc_cylinder(d1,d2=0,a=90,r=0,e1=0,e2=0,p="center") {
  _r = r>0 ? r : _d2/2;   // r default = d2/2
  _fn = $fn>0 ? $fn : 36; // $fn default = 36
  fn = _fn / (360/a);     // apply $fn to the main arc
- rs = a / fn;            // rotation angle per segment
+ as = a / fn;            // rotation angle per segment
  ds = (d2-d1) / fn;      // diameter increase per segment
  ns = fn-1;              // number of segments
 
  translate([_r,0,0])
   for (i = [0:ns]) {
-   ra = rs * i;      // rotation angle a
-   rb = ra + rs;     // rotation angle b
+   aa = as * i;      // rotation angle a
+   ab = aa + as;     // rotation angle b
    da = d1 + ds * i; // diameter a
    db = da + ds;     // diameter b
    ta =              // translation a
@@ -97,22 +97,22 @@ module arc_cylinder(d1,d2=0,a=90,r=0,e1=0,e2=0,p="center") {
 
    // one segment
    hull() {
-    rotate([0,ra,0])
+    rotate([0,aa,0])
      translate([ta,0,0])
       cylinder(h=c,d=da,center=true,$fn=_fn);
-    rotate([0,rb,0])
+    rotate([0,ab,0])
      translate([tb,0,0]) {
       cylinder(h=c,d=db,center=true,$fn=_fn);
      }
    }
    // extend small end
    if(i==0)
-    rotate([0,ra,0])
+    rotate([0,aa,0])
      translate([ta,0,-e1/2])
       cylinder(h=e1+c,d=da,center=true,$fn=_fn);
    // extend large end
    if(i>=ns)
-    rotate([0,rb,0])
+    rotate([0,ab,0])
      translate([tb,0,e2/2-c/2])
       cylinder(h=e2+c,d=db,center=true,$fn=_fn);
   }
