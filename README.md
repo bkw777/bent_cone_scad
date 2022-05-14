@@ -6,7 +6,7 @@ OpenSCAD module to create a bent cone
 ![](bent_cone_demo_2.png)
 ![](bent_cone_demo_3.png)
 
-## bent_cone()
+## bent_cone(r,a,d1,d2,w1,w2,e1,e2,p)
 Creates a curved cylinder or cone.  
 Like cylinder() in that d1 and d2 describe two circles at the ends, and they may be different diameters to make a cone rather than a cylinder.  
 but where the centers of the circles in cylinder() follow a straight line path described by height h,  
