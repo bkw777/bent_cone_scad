@@ -22,6 +22,7 @@ w2 = large end wall thickness (w1)
 0 = solid object<br>
 >0 = hollow tube
 </ul>
+
 e1 = small end extension (0)  
 e2 = large end extension (0)  
 p = main arc path alignment relative to the body ("center")  
