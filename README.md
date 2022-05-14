@@ -25,7 +25,7 @@ p = main arc path alignment relative to the body
 $fn = used to size the main arc segments the same as normal cylinders. If $fn is not set, 36 is used.
 
 ## arc_tube()  
-Just arc_cylinder() with an added wall-thickness field to make a hollow arc_cylinder by subtracting a 2nd arc_cylinder that is wall-thickness smaller.
+Just arc_cylinder() with an added wall thickness parameter to make a hollow arc_cylinder by subtracting a 2nd smaller arc_cylinder.
 
 All the same parameters as arc_cylinder(), plus:  
 w = wall thickness  
