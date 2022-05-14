@@ -1,17 +1,14 @@
 // bent_cone.scad - Brian K. White - b.kenyon.w@gmail.com - licenced CC-BY-SA
 // arc_cylinder() and arc_tube()
 
-// arc_cylinder() is like cylinder()
+// bent_cone() is like cylinder()
 // where d1 and d2 describe two circles at the ends
-// but where the centers of the circles in cylinder() follow a straight line described by height h,
-// the centers of the circles in arc_cylinder() follow the path of an arc described by radius r and degrees a.
-
-// arc_tube() just arc_cylinder() with an added wall-thickness field
-// to make a hollow arc_cylinder by subtracting a 2nd arc_cylinder that is wall-thickness smaller.
-
-// arc_cylinder()
-// d1 = small-end diameter
-// d2 = large-end diameter
+// but where the centers of the circles in cylinder() follow a straight line path described by height h,
+// the centers of the circles in bent_cone() follow an arc path described by radius r and degrees a.
+//
+// parameters:
+// d1 = small-end outside diameter (required)
+// d2 = large-end outside diameter
 // r = main arc radius
 // a = main arc angle
 // e1 = extend the small end with a normal cylinder this long
@@ -20,13 +17,12 @@
 //   "center" (default) = the main arc defines the center of the tube
 //   "inside" = the main arc defines the concave side of the tube (the tube hugs the outside of a cylinder)
 //   "outside" = the main arc defines the convex side of the tube (the tube hugs the inside of a cylinder)
+// w = wall thickness
+//   0(default) = solid object
+//   >0 = hollow tube
 // $fn = used to size the main arc segments the same as normal cylinders. If $fn is not set, 36 is used.
 
-// arc_tube()
-// same as arc_cylinder(), plus:
-// w = wall thickness
-// d1 & d2 are the outside diameter
-// inside diameter is made by subtracting w*2
+// TODO - allow the wall thickness to change along the way too
 
 // demo
 /*
@@ -39,17 +35,16 @@ end_ext=0;
 $fn = 64;
 
 translate([0,-od_large*2,0])
- arc_tube(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="inside");
+ bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="inside",w=wall_thickness);
 
-arc_tube(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext);
+bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,w=wall_thickness);
 translate([arc_radius,0,0]) rotate([90,0,0]) %cylinder(r=arc_radius,h=od_large*6,center=true);
 
 translate([0,od_large*2,0])
- arc_tube(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="outside");
+ bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="outside",w=wall_thickness);
 */
 
-// hollow tube bent cone
-module arc_tube(d1,d2=0,a=90,r=0,e1=0,e2=0,w=1,p="center") {
+module bent_cone(d1,d2=0,a=90,r=0,e1=0,e2=0,w=0,p="center") {
  o=0.01;
  assert(d1>0);
  _d2 = d2>0 ? d2 : d1;  // d2 default = d1
@@ -62,15 +57,18 @@ module arc_tube(d1,d2=0,a=90,r=0,e1=0,e2=0,w=1,p="center") {
   p == "inside" ? -w :
   p == "outside" ? w :
   0;
-  
- difference() {
+
+ if(w>0)
+  difference() {
+   arc_cylinder(d1=d1,d2=_d2,a=a,r=_r,e1=e1,e2=e2,p=p);
+   translate([_t,0,0])
+    arc_cylinder(d1=d1-w*2,d2=_d2-w*2,a=a,r=_r2,e1=e1+o,e2=e2+o,p=p);
+  }
+ else
   arc_cylinder(d1=d1,d2=_d2,a=a,r=_r,e1=e1,e2=e2,p=p);
-  translate([_t,0,0])
-   arc_cylinder(d1=d1-w*2,d2=_d2-w*2,a=a,r=_r2,e1=e1+o,e2=e2+o,p=p);
- }
+
 }
 
-// bent cone
 module arc_cylinder(d1,d2=0,a=90,r=0,e1=0,e2=0,p="center") {
  c = 0.001;              // thickness of cylinder ends of hull
  assert(d1>0);
