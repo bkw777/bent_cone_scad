@@ -24,8 +24,8 @@ p = main arc path alignment relative to the body
 "inside" = the main arc defines the concave side of the tube (the tube hugs the outside of a cylinder)<br>
 "outside" = the main arc defines the convex side of the tube (the tube hugs the inside of a cylinder)
 </ul>
-w1 = small end wall thickness
-w2 = large end wall thickness (default same as w1)
+w1 = small end wall thickness  
+w2 = large end wall thickness (default same as w1)  
 <ul>
 0 (default) = solid object<br>
 >0 = hollow tube
