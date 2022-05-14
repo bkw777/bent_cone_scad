@@ -21,9 +21,10 @@
 //     "outside" = the main arc defines the convex side of the tube (the tube hugs the inside of a cylinder)
 //   $fn = used to size the main arc segments the same as normal cylinders. If $fn is not set, 36 is used.
 
-// TODO - different math so that both the inside and outside curves end in tangents for smoother transition
-// ie: instead of just simply increasing the cross section diameter linearly like a cone (if the path were straight)
-// create essentially the effect of both p="inside" and p="outside" at the same time.
+// TODO
+//   * different math so that both the inside and outside curves end in tangents for smoother transition
+//     essentially get p="inside" and p="outside" at the same time, and probably obsolete the p parameter
+//   * replace this initial quick & dirty cylinder-cylinder-hull implementation with something using sweep() and skin()
 
 // demo
 /*
