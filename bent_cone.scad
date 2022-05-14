@@ -1,31 +1,29 @@
 // bent_cone.scad - Brian K. White - b.kenyon.w@gmail.com - licenced CC-BY-SA
-// arc_cylinder() and arc_tube()
 
-// bent_cone() is like cylinder()
-// where d1 and d2 describe two circles at the ends
-// but where the centers of the circles in cylinder() follow a straight line path described by height h,
-// the centers of the circles in bent_cone() follow an arc path described by radius r and degrees a.
+// Like cylinder(), in that d1 and d2 define two circles with a solid filled between them
+// But where the centers of the circles in cylinder() follow a straight line path described by "h" (height),
+// the centers of the circles in bent_cone() follow an arc path described by "r" (radius) and "a" (angle).
 //
-// parameters:
-// d1 = small-end outside diameter (required)
-// d2 = large-end outside diameter
-// r = main arc radius
-// a = main arc angle
-// e1 = extend the small end with a normal cylinder this long
-// e2 = extend the large end with a normal cylinder this long
-// p = main arc path alignment relative to the body
-//   "center" (default) = the main arc defines the center of the tube
-//   "inside" = the main arc defines the concave side of the tube (the tube hugs the outside of a cylinder)
-//   "outside" = the main arc defines the convex side of the tube (the tube hugs the inside of a cylinder)
-// w1 = small end wall thickness
-// w2 = large end wall thickness
-//   0(default) = solid object
-//   >0 = hollow tube
-//   either w1 or w2 may be 0, and creates a hollow tube where the walls thin down to 0 thickness at one end
-//   if both w1 and w2 are 0 (default), creates a solid object
-// $fn = used to size the main arc segments the same as normal cylinders. If $fn is not set, 36 is used.
+// bent_cone(r,a,d1,d2,w1,w2,e1,e2,p)
+//   r = main arc radius (d2/2)
+//   a = main arc angle (90)
+//   d1 = small end outside diameter (10)
+//   d2 = large end outside diameter (d1)
+//   w1 = small end wall thickness (0)
+//   w2 = large end wall thickness (w1)
+//     0 = solid object
+//     >0 = hollow tube
+//   e1 = small end extension (0)
+//   e2 = large end extension (0)
+//   p = main arc path alignment relative to the body ("center")
+//     "center" (or "" or anything else) = the main arc defines the center of the tube
+//     "inside" = the main arc defines the concave side of the tube (the tube hugs the outside of a cylinder)
+//     "outside" = the main arc defines the convex side of the tube (the tube hugs the inside of a cylinder)
+//   $fn = used to size the main arc segments the same as normal cylinders. If $fn is not set, 36 is used.
 
-// TODO - allow the wall thickness to change along the way too
+// TODO - different math so that both the inside and outside curves end in tangents for smoother transition
+// ie: instead of just simply increasing the cross section diameter linearly like a cone (if the path were straight)
+// create essentially the effect of both p="inside" and p="outside" at the same time.
 
 // demo
 /*
@@ -85,13 +83,13 @@ module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,e1=0,e2=0,p="center") {
  ns = fn-1;                // number of segments
  _d2 = d2>d1 ? d2 : d1;    // d2 default = d1
  _r1 = r1>0 ? r1 : _d2/2;  // r1 default = d2/2
- _r2 = r2>0 ? r2 : _r1;  // r2 default = r1
+ _r2 = r2>0 ? r2 : _r1;    // r2 default = r1
  as = a / fn;              // rotation angle per segment
  ds = _d2>d1 ? (_d2-d1) / fn : 0; // diameter increase per segment
- rs =
+ rs =                      // radius change per segment
   _r2>_r1 ? (_r2-_r1)/fn :
   _r1>_r2 ? -(_r1-_r2)/fn :
-  0; // radius increase or decrease per segment
+  0;
 
  translate([_r1,0,0])
   for (i = [0:ns]) {
