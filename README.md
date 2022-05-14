@@ -14,7 +14,7 @@ the centers of the circles in bent_cone() follow an arc path described by radius
 
 d1 = small-end outside diameter  
 d2 = large-end outside diameter  
-r1 = main arc radius  
+r = main arc radius  
 a = main arc angle  
 e1 = extend the small end with a normal cylinder this long  
 e2 = extend the large end with a normal cylinder this long  

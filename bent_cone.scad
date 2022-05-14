@@ -9,7 +9,7 @@
 // parameters:
 // d1 = small-end outside diameter (required)
 // d2 = large-end outside diameter
-// r1 = main arc radius
+// r = main arc radius
 // a = main arc angle
 // e1 = extend the small end with a normal cylinder this long
 // e2 = extend the large end with a normal cylinder this long
@@ -35,24 +35,26 @@ end_ext=0;
 $fn = 64;
 
 translate([0,-od_large*2,0])
- bent_cone(d1=od_small,d2=od_large,r1=arc_radius,e1=end_ext,e2=end_ext,p="inside",w1=wall_thickness);
+ bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="inside",w1=wall_thickness,w2=6);
 
-bent_cone(d1=od_small,d2=od_large,r1=arc_radius,e1=end_ext,e2=end_ext,w1=wall_thickness);
+bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,w1=wall_thickness,w2=6);
 translate([arc_radius,0,0]) rotate([90,0,0]) %cylinder(r=arc_radius,h=od_large*6,center=true);
 
 translate([0,od_large*2,0])
- bent_cone(d1=od_small,d2=od_large,r1=arc_radius,e1=end_ext,e2=end_ext,p="outside",w1=wall_thickness);
+ bent_cone(d1=od_small,d2=od_large,r=arc_radius,e1=end_ext,e2=end_ext,p="outside",w1=wall_thickness,w2=6);
 */
 
-module bent_cone(d1,d2=0,a=90,r1=0,e1=0,e2=0,w1=0,w2=-1,p="center") {
+module bent_cone(d1=10,d2=0,a=90,r=0,e1=0,e2=0,w1=0,w2=-1,p="center") {
  o=0.01;
  assert(d1>0);
- _d2 = d2>0 ? d2 : d1;     // d2 default = d1
- _r1 = r1>0 ? r1 : _d2/2;  // r1 default = d2/2
+ _d2 = d2>d1 ? d2 : d1;    // d2 default = d1
+ _r = r>0 ? r : _d2/2;     // r default = d2/2
+ _w2 = w2>w1 ? w2 : w1;    // w2 default = w1
  _r1c =                    // r1 for cut object offset by w1 according to p
-  p == "inside" ? _r1 + w1:
-  p == "outside" ? _r1 - w1:
-  _r1;
+  p == "inside" ? _r + w1:
+  p == "outside" ? _r - w1:
+  _r;
+ _r2c = _r1c;
  _t =                      // position of cut object offset by w1 according to p
   p == "inside" ? -w1 :
   p == "outside" ? w1 :
@@ -60,24 +62,25 @@ module bent_cone(d1,d2=0,a=90,r1=0,e1=0,e2=0,w1=0,w2=-1,p="center") {
 
  if(w1>0)
   difference() {
-   arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r1,e1=e1,e2=e2,p=p);
+   arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r,e1=e1,e2=e2,p=p);
    translate([_t,0,0])
-    arc_cylinder(d1=d1-w1*2,d2=_d2-w1*2,a=a,r1=_r1c,e1=e1+o,e2=e2+o,p=p);
+    arc_cylinder(d1=d1-w1*2,d2=_d2-w1*2,a=a,r1=_r1c,r2=_r2c,e1=e1+o,e2=e2+o,p=p);
   }
  else
-  arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r1,e1=e1,e2=e2,p=p);
+  arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r,e1=e1,e2=e2,p=p);
 }
 
 module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,e1=0,e2=0,p="center") {
  c = 0.001;                // thickness of cylinder ends of hull
  _fn = $fn>0 ? $fn : 36;   // $fn default = 36
  fn = _fn / (360/a);       // apply $fn to the main arc
+ ns = fn-1;                // number of segments
  _d2 = d2>d1 ? d2 : d1;    // d2 default = d1
  _r1 = r1>0 ? r1 : _d2/2;  // r1 default = d2/2
  _r2 = r2>_r1 ? r2 : _r1;  // r2 default = r1
  as = a / fn;              // rotation angle per segment
  ds = _d2>d1 ? (_d2-d1) / fn : 0; // diameter increase per segment
- ns = fn-1;                // number of segments
+ rs = _r2>_r1 ? (_r2-_r1) / fn : 0; // radius increase per segment
 
  translate([_r1,0,0])
   for (i = [0:ns]) {
@@ -85,13 +88,16 @@ module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,e1=0,e2=0,p="center") {
    ab = aa + as;     // rotation angle b
    da = d1 + ds * i; // diameter a
    db = da + ds;     // diameter b
+   ra = _r1 + rs * i; // radius a
+   rb = ra + rs;     // radius b
+   
    ta =              // translation a
-    p=="inside" ? -_r1 - da/2 :
-    p=="outside" ? -_r1 + da/2 :
+    p=="inside" ? -ra - da/2 :
+    p=="outside" ? -ra + da/2 :
     -_r1;
    tb =              // translation b
-    p=="inside" ? -_r1 - db/2 :
-    p=="outside" ? -_r1 + db/2 :
+    p=="inside" ? -rb - db/2 :
+    p=="outside" ? -rb + db/2 :
     -_r1;
 
    // one segment
