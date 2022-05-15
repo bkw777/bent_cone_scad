@@ -7,10 +7,10 @@
 // bent_cone(r,a,d1,d2,w1,w2,p,fn)
 //   r = main arc radius (d2/2)
 //   a = main arc angle (90)
-//   d1 = small end outside diameter (10)
-//   d2 = large end outside diameter (d1)
-//   w1 = small end wall thickness (0)
-//   w2 = large end wall thickness (w1)
+//   d1 = beginning outside diameter (10)
+//   d2 = ending outside diameter (d1)
+//   w1 = beginning wall thickness (0)
+//   w2 = ending wall thickness (w1)
 //     0 = solid object
 //     >0 = hollow tube
 //   p = main arc path alignment relative to the body ("center")
@@ -30,10 +30,10 @@
 /*
 r = 40;   // main arc path radius
 a = 90;   // main arc path angle
-d1 = 10;  // small end outside diameter
-w1 = 1;   // small end wall thickness
-d2 = 30;  // large end outside diameter
-w2 = 1;   // large end wall thickness
+d1 = 10;  // beginning outside diameter
+w1 = 1;   // beginning wall thickness
+d2 = 30;  // ending outside diameter
+w2 = 1;   // ending wall thickness
 fn = 72;  // virtual $fn for big arc
 $fn = 36; // $fn for everything else
 
@@ -46,25 +46,29 @@ translate([r,0,0]) rotate([90,0,0]) %cylinder(r=r,h=d2*6,center=true);
 translate([0,d2*2,0])
  bent_cone(a=a,r=r,d1=d1,d2=d2,w1=w1,w2=w2,p="outside");
 */
-// demo
-//bent_cone(a=180,r=60,d1=18,d2=30,w1=0.4,fn=72,$fn=36);
 
-module bent_cone(d1=10,d2=0,a=90,r=0,w1=0,w2=-1,p="center",fn=0) {
+// trumpet U, d2 smaller than d1, fn greater than $fn
+//bent_cone(a=180,d1=20,d2=15,r=60,w1=0.4,fn=72,$fn=32);
+
+// nautilus, r=0 p="inside"
+//bent_cone(a=360,d1=18,d2=10,r=0,w1=0.4,p="inside",fn=72,$fn=32);
+
+module bent_cone(d1=10,d2=-1,a=90,r=-1,w1=0,w2=-1,p="center",fn=0) {
  o=0.01;
  assert(d1>0);
- _d2 = d2>d1 ? d2 : d1;    // d2 default = d1
- _r = r>0 ? r : _d2/2;     // r default = d2/2
- _w2 = w2>-1 ? w2 : w1;    // w2 default = w1
+ _d2 = d2>-1 ? d2 : d1;         // d2 default = d1
+ _r = r>-1 ? r : max(d1,_d2)/2; // r default = max(d1,d2)/2
+ _w2 = w2>-1 ? w2 : w1;         // w2 default = w1
 
- _r1c =                    // r1 for cut object offset by w1 according to p
+ _r1c =                         // r1 for cut object offset by w1 according to p
   p == "inside" ? _r + w1:
   p == "outside" ? _r - w1:
   _r;
- _r2c =                    // r2 for cut object offset by w2 according to p
+ _r2c =                         // r2 for cut object offset by w2 according to p
   p == "inside" ? _r + _w2:
   p == "outside" ? _r - _w2:
   _r;
- _t =                      // position of cut object offset by w1 according to p
+ _t =                           // position of cut object offset by w1 according to p
   p == "inside" ? -w1 :
   p == "outside" ? w1 :
   0;
@@ -79,7 +83,7 @@ module bent_cone(d1=10,d2=0,a=90,r=0,w1=0,w2=-1,p="center",fn=0) {
   arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r,p=p,fn=fn);
 }
 
-module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,p="center",e=0,fn=0) {
+module arc_cylinder(d1=10,d2=-1,a=90,r1=-1,r2=-1,p="center",e=0,fn=0) {
  c = 0.001;                // thickness of cylinder ends of hull
  _fn =                     // fn default = $fn else 36
   fn>0 ? fn :
@@ -87,11 +91,14 @@ module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,p="center",e=0,fn=0) {
   36;
  afn = _fn/(360/a);        // main arc fn
  ns = afn-1;               // number of segments
- _d2 = d2>d1 ? d2 : d1;    // d2 default = d1
- _r1 = r1>0 ? r1 : _d2/2;  // r1 default = d2/2
- _r2 = r2>0 ? r2 : _r1;    // r2 default = r1
+ _d2 = d2>-1 ? d2 : d1;    // d2 default = d1
+ _r1 = r1>-1 ? r1 : max(d1,_d2)/2; // r1 default = max(d1,d2)/2
+ _r2 = r2>-1 ? r2 : _r1;   // r2 default = r1
  as = a / afn;             // rotation angle per segment
- ds = _d2>d1 ? (_d2-d1) / afn : 0; // diameter increase per segment
+ ds =                      // diameter change per segment
+  _d2>d1 ? (_d2-d1) / afn :
+  d1>_d2 ? -(d1-_d2) / afn :
+  0;
  rs =                      // radius change per segment
   _r2>_r1 ? (_r2-_r1)/afn :
   _r1>_r2 ? -(_r1-_r2)/afn :
@@ -125,12 +132,12 @@ module arc_cylinder(d1=10,d2=0,a=90,r1=0,r2=0,p="center",e=0,fn=0) {
      }
    }
    if(e>0) {
-    // extend small end
+    // extend beginning end
     if(i==0)
      rotate([0,aa,0])
       translate([ta,0,-e/2])
        cylinder(h=e+c,d=da,center=true);
-    // extend large end
+    // extend ending end
     if(i>=ns)
      rotate([0,ab,0])
       translate([tb,0,e/2-c/2])

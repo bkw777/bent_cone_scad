@@ -12,12 +12,12 @@ Like cylinder() in that d1 and d2 describe two circles at the ends, and they may
 but where the centers of the circles in cylinder() follow a straight line path described by height h,  
 the centers of the circles in bent_cone() follow an arc path described by radius r and angle a.
 
-r = main arc path radius (d2/2)  
+r = main arc path radius (max(d1,d2)/2)  
 a = main arc path angle (90)  
-d1 = small end outside diameter (10)  
-d2 = large end outside diameter (d1)  
-w1 = small end wall thickness (0)  
-w2 = large end wall thickness (w1)  
+d1 = beginning outside diameter (10)  
+d2 = ending outside diameter (d1)  
+w1 = beginning wall thickness (0)  
+w2 = ending wall thickness (w1)  
 <ul>
 0 = solid object<br>
 >0 = hollow tube
