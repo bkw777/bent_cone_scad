@@ -1,4 +1,4 @@
-// bent_cone.scad - Brian K. White - b.kenyon.w@gmail.com - licenced CC-BY-SA
+// bent_cone.scad - Brian K. White - b.kenyon.w@gmail.com - CC-BY-SA
 
 // Like cylinder(), in that d1 and d2 define two circles with a solid filled between them
 // But where the centers of the circles in cylinder() follow a straight line path described by "h" (height),
@@ -26,38 +26,13 @@
 //   * refactor p and r2 away into a single more generic offset param
 //   * properly handle remainder angle when a doesn't evenly divide by fn
 
-// demo
-/*
-r = 40;   // main arc path radius
-a = 90;   // main arc path angle
-d1 = 10;  // beginning outside diameter
-w1 = 1;   // beginning wall thickness
-d2 = 30;  // ending outside diameter
-w2 = 1;   // ending wall thickness
-fn = 72;  // virtual $fn for big arc
-$fn = 36; // $fn for everything else
-
-translate([0,-d2*2,0])
- bent_cone(a=a,r=r,d1=d1,d2=d2,w1=w1,w2=w2,p="inside");
-
-bent_cone(a=a,r=r,d1=d1,d2=d2,w1=w1,w2=w2);
-translate([r,0,0]) rotate([90,0,0]) %cylinder(r=r,h=d2*6,center=true);
-
-translate([0,d2*2,0])
- bent_cone(a=a,r=r,d1=d1,d2=d2,w1=w1,w2=w2,p="outside");
-*/
-// trumpet U, d2 smaller than d1, fn greater than $fn
-//bent_cone(a=180,d1=20,d2=15,r=60,w1=0.4,fn=72,$fn=32);
-// nautilus, r=0 p="inside"
-//bent_cone(a=360,d1=18,d2=10,r=0,w1=0.4,p="inside",fn=72,$fn=32);
-
 module bent_cone(d1=10,d2=-1,a=90,r=-1,w1=0,w2=-1,p="center",fn=0) {
+ assert(a>0,"bent_cone()");
  _d2 = d2>-1 ? d2 : d1;         // d2 default = d1
  _r = r>-1 ? r : max(d1,_d2)/2; // r default = max(d1,d2)/2
 
  if(w1>0 || w2>0) {
   // hollow
-  e = 1;
   _w2 = w2>-1 ? w2 : w1;         // w2 default = w1
   _r1c =                         // r1 for cut object offset by w1 according to p
    p == "inside" ? _r + w1:
@@ -74,7 +49,7 @@ module bent_cone(d1=10,d2=-1,a=90,r=-1,w1=0,w2=-1,p="center",fn=0) {
   difference() {
    arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r,p=p,fn=fn);
    translate([_t,0,0])
-    arc_cylinder(d1=d1-w1*2,d2=_d2-_w2*2,a=a,r1=_r1c,r2=_r2c,p=p,e=e,fn=fn);
+    arc_cylinder(d1=d1-w1*2,d2=_d2-_w2*2,a=a,r1=_r1c,r2=_r2c,p=p,e=true,fn=fn);
   }
  }
  else
@@ -82,8 +57,9 @@ module bent_cone(d1=10,d2=-1,a=90,r=-1,w1=0,w2=-1,p="center",fn=0) {
   arc_cylinder(d1=d1,d2=_d2,a=a,r1=_r,p=p,fn=fn);
 }
 
-module arc_cylinder(d1=10,d2=-1,a=90,r1=-1,r2=-1,p="center",e=0,fn=0) {
- c = 0.001;                // thickness of cylinder ends of hull
+module arc_cylinder(d1=10,d2=-1,a=90,r1=-1,r2=-1,p="center",e=false,fn=0) {
+ assert(a>0,"arc_cylinder()");
+ c = 1/256;                // thickness of cylinder ends of hull (tiny even fp value)
  _fn =                     // fn default = $fn else 36
   fn>0 ? fn :
   $fn>0 ? $fn :
@@ -111,39 +87,26 @@ module arc_cylinder(d1=10,d2=-1,a=90,r1=-1,r2=-1,p="center",e=0,fn=0) {
    db = da + ds;      // diameter b
    ra = _r1 + rs * i; // radius a
    rb = ra + rs;      // radius b
-   ta =               // translation a
+   xa =               // ra & da to x translation
     p=="inside" ? -ra - da/2 :
     p=="outside" ? -ra + da/2 :
     -_r1;
-   tb =               // translation b
+   xb =               // rb & db to x translation
     p=="inside" ? -rb - db/2 :
     p=="outside" ? -rb + db/2 :
     -_r1;
-
-   tza = i<=0 ? c/2 : 0;    // adjust the start & stop discs
-   tzb = i>=ns ? -c/2 : 0;
+   za = i>0 || e ? 0 : c/2;   // disc a elevation
+   zb = i<ns || e ? 0 : -c/2; // disc b elevation
 
    // one segment
    hull() {
     rotate([0,aa,0])
-     translate([ta,0,tza])
+     translate([xa,0,za])
       cylinder(h=c,d=da,center=true);
     rotate([0,ab,0])
-     translate([tb,0,tzb]) {
+     translate([xb,0,zb]) {
       cylinder(h=c,d=db,center=true);
      }
-   }
-   if(e>0) {
-    // extend beginning end
-    if(i<=0)
-     rotate([0,aa,0])
-      translate([ta,0,-e])
-       cylinder(h=e+c,d=da);
-    // extend ending end
-    if(i>=ns)
-     rotate([0,ab,0])
-      translate([tb,0,-c])
-       cylinder(h=e+c,d=db);
    }
   }
 }
