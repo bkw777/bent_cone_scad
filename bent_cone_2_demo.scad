@@ -16,38 +16,27 @@ ft = 3;
 $fs = 0.5;
 
 bent_cone(a=a,r=r,d1=d1,d2=d2,w=w,fn=72);
-
 translate([0,0,-ft/2+o]) flange(s=d1,b=b1,t=ft,w=w,m=2.8);
 translate([r,0,0]) rotate([0,a,0]) translate([-r,0,ft/2-o]) flange(s=d2,b=b2,t=ft,w=w,m=3.7);
 
 module flange(s=50,b=40,t=3,w=1,m=3) {
- co = b/2;
- cd = s-b;
+ p = b/2;
+ l = [[-p,-p,0],[-p,p,0],[p,p,0],[p,-p,0]];
  difference() {
-  hull() {
-   translate([-co,-co,0]) cylinder(h=t,d=cd,center=true);
-   translate([-co,co,0]) cylinder(h=t,d=cd,center=true);
-   translate([co,co,0]) cylinder(h=t,d=cd,center=true);
-   translate([co,-co,0]) cylinder(h=t,d=cd,center=true);
-  }
-  group(){
-   translate([-co,-co,0]) cylinder(h=t+1,d=m,center=true);
-   translate([-co,co,0]) cylinder(h=t+1,d=m,center=true);
-   translate([co,co,0]) cylinder(h=t+1,d=m,center=true);
-   translate([co,-co,0]) cylinder(h=t+1,d=m,center=true);
+  hull() for(v=l) translate(v) cylinder(h=t,d=s-b,center=true);
+  group() {
+   for(v=l) translate(v) cylinder(h=t+1,d=m,center=true);
    cylinder(h=t+1,d=s-w*2,center=true);
   }
  }
 }
 
 module bent_cone(r=-1,a=90,d1=10,d2=20,fn=-1,w=0) {
- if(w<=0)
-  _bent_cone(d1=d1,d2=d2,a=a,r=r,fn=fn);
- else
-  difference(){
+ if(w<=0) _bent_cone(a=a,r=r,d1=d1,d2=d2,fn=fn);
+ else difference() {
   _bent_cone(a=a,r=r,d1=d1,d2=d2,fn=fn);
   _bent_cone(a=a,r=r,d1=d1-w*2,d2=d2-w*2,fn=fn,e=true);
-  }
+ }
 }
 
 module _bent_cone(r=-1,a=90,d1=10,d2=20,fn=-1,e=false) {
